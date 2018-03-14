@@ -1,12 +1,15 @@
 ---
+# ---所有节点都要做的操作----
 - hosts: all
   remote_user: root
   gather_facts: True
   tasks:
-  - name: disabled selinux
+  
+  - name: 关闭selinux
     selinux: policy=targeted state=permissive
     selinux: state=disabled
 
+# 提前准备好repo文件
   - name: 设置Base_repo
     copy: src=/root/repo/Centos-7.repo dest=/etc/yum.repos.d/CentOS-Base.repo
   - name: 设置epel_repo
@@ -26,6 +29,8 @@
     - MariaDB-server
     - galera
 
+
+# ---第一个启动的节点要做的操作---
 - hosts: master
   remote_user: root
   gather_facts: True
@@ -35,6 +40,7 @@
   - name: 启动地一个节点
     shell: galera_new_cluster
 
+# ---其他的节点要做的操作，配置文件中，先把各个节点的IP地址列表写进去，自己的IP地址可以不用写，已经自己获取---
 - hosts: others
   remote_user: root
   gather_facts: True
