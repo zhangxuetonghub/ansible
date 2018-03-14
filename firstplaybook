@@ -1,0 +1,28 @@
+---
+- hosts: app
+  remote_user: root
+  gather_facts: True
+  tasks:
+  - name: 安装apache
+    yum: name={{ item }} state=present
+    with_items:
+    - httpd
+    - httpd-devel
+  - name: 检查Apache运行状态，并设置开机启动
+    service: name=httpd state=started enabled=yes
+- hosts: nosql
+  remote_user: root
+  gather_facts: True
+  tasks:
+  - name: 安装redis
+    yum: name=redis state=present
+  - name: 启动并设置redis开机启动
+    service: name=redis state=started enabled=yes
+- hosts: db
+  remote_user: root
+  gather_facts: True
+  tasks:
+  - name: 安装mariadb
+    yum: name=mariadb-server state=present
+  - name: 启动mariadb服务设置开机启动
+    service: name=mariadb state=started enabled=yes
