@@ -8,6 +8,10 @@
   - name: 关闭selinux
     selinux: policy=targeted state=permissive
     selinux: state=disabled
+    
+  - name: 屏蔽掉系统原有repo
+    shell: mkdir /etc/yum.repos.d/back && mv /etc/yum.repos.d/C* /etc/yum.repos.d/back
+
 
 # 提前准备好repo文件
   - name: 设置Base_repo
