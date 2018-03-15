@@ -1,0 +1,71 @@
+---
+- hosts: all
+  remote_user: root
+  gather_facts: True
+  tasks:
+  - name: disabled selinux
+    selinux: policy=targeted state=permissive
+    selinux: state=disabled
+
+  - name: 屏蔽掉系统原有repo
+    shell: mkdir /etc/yum.repos.d/back && mv /etc/yum.repos.d/C* /etc/yum.repos.d/back || echo '重复'
+
+  - name: 设置Base_repo
+    copy: src=/root/repo/Centos-7.repo dest=/etc/yum.repos.d/CentOS-Base.repo
+  - name: 设置epel_repo
+    copy: src=/root/repo/epel-7.repo dest=/etc/yum.repos.d/epel.repo
+  - name: 设置MariaDB_repo
+    copy: src=/root/repo/mariadb.repo dest=/etc/yum.repos.d/mariadb.repo
+
+  - name: install firewalld
+    yum: name=firewalld state=present
+
+  - name: sotp firewalld
+    service: name=firewalld state=stopped enabled=no
+
+  - name: 安装MariaDB-server galera
+    yum: name={{ item }} enablerepo=mariadb5 state=present
+    with_items:
+    - MariaDB-Galera-server
+    - galera
+
+  - name: 启动所有节点的服务
+    shell: /etc/init.d/mysql start
+
+  - name: 安装MySQL-python
+    yum: name=MySQL-python  state=present
+
+  - name: 启动所有节点的服务
+    shell: /etc/init.d/mysql start
+
+  - name: 安装MySQL-python
+    yum: name=MySQL-python  state=present
+
+
+  - name: 创建同步数据库的用户
+    mysql_user: name=caiyiling  password=caiyilin  priv='*.*:ALL' state=present host={{ item }}
+    with_items:
+       - '%'
+       - 127.0.0.1
+       - localhost
+       - 172.16.150.0/24
+
+  - name: 停止所有节点的服务
+    shell: /etc/init.d/mysql stop
+
+  - name: 复制配置文件到各个节点
+    template: src=/root/config/server5.j2 dest=/etc/my.cnf.d/server.cnf
+
+- hosts: master
+  remote_user: root
+  gather_facts: True
+  tasks:
+  - name: 启动地一个节点
+    shell: /etc/init.d/mysql bootstrap
+
+- hosts: others
+  remote_user: root
+  gather_facts: True
+  tasks:
+  - name: 启动其他节点
+    shell: /etc/init.d/mysql start
