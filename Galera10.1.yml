@@ -45,3 +45,26 @@
   tasks:
   - name: 启动其他节点
     service: name=mariadb state=started
+    
+    
+配置文件
+[galera]
+# Mandatory settings
+wsrep_on=ON
+wsrep_provider=/usr/lib64/galera/libgalera_smm.so
+# specify all nodes in cluster(所有节点的IP)
+wsrep_cluster_address=gcomm://{% for i in groups['all'] %}{{i}}{% if loop.last %}{% else %},{% endif %} {% endfor %}
+binlog_format=row
+default_storage_engine=InnoDB
+innodb_autoinc_lock_mode=2
+bind-address=0.0.0.0
+
+# add follows
+# cluster name
+wsrep_cluster_name="MariaDB_Cluster"
+# own IP address（当前节点的IP）
+wsrep_node_address={{ ansible_all_ipv4_addresses[0] }}
+# replication provider
+wsrep_sst_method=rsync
+
+ 
