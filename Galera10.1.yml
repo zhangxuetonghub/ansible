@@ -1,19 +1,15 @@
 ---
-# ---所有节点都要做的操作----
 - hosts: all
   remote_user: root
   gather_facts: True
   tasks:
-  
-  - name: 关闭selinux
+  - name: disabled selinux
     selinux: policy=targeted state=permissive
     selinux: state=disabled
-    
+
   - name: 屏蔽掉系统原有repo
-    shell: mkdir /etc/yum.repos.d/back && mv /etc/yum.repos.d/C* /etc/yum.repos.d/back
+    shell: mkdir /etc/yum.repos.d/back && mv /etc/yum.repos.d/C* /etc/yum.repos.d/back || echo '重复'
 
-
-# 提前准备好repo文件
   - name: 设置Base_repo
     copy: src=/root/repo/Centos-7.repo dest=/etc/yum.repos.d/CentOS-Base.repo
   - name: 设置epel_repo
@@ -28,29 +24,24 @@
     service: name=firewalld state=stopped enabled=no
 
   - name: 安装MariaDB-server galera
-    yum: name={{ item }} enablerepo=mariadb state=present
+    yum: name={{ item }} enablerepo=mariadb10 state=present
     with_items:
     - MariaDB-server
     - galera
 
+  - name: 复制配置文件
+    template: src=/root/config/server10.j2 dest=/etc/my.cnf.d/server.cnf
 
-# ---第一个启动的节点要做的操作---
 - hosts: master
   remote_user: root
   gather_facts: True
   tasks:
-  - name: 复制配置文件
-    template: src=/root/config/master.j2 dest=/etc/my.cnf.d/server.cnf
   - name: 启动地一个节点
     shell: galera_new_cluster
 
-# ---其他的节点要做的操作，配置文件中，先把各个节点的IP地址列表写进去，自己的IP地址可以不用写，已经自己获取---
 - hosts: others
   remote_user: root
   gather_facts: True
   tasks:
-  - name: 复制配置文件
-    template: src=/root/config/others.j2 dest=/etc/my.cnf.d/server.cnf
   - name: 启动其他节点
     service: name=mariadb state=started
-                                                                                                         
