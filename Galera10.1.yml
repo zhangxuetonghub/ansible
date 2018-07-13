@@ -54,6 +54,7 @@ wsrep_on=ON
 wsrep_provider=/usr/lib64/galera/libgalera_smm.so
 # specify all nodes in cluster(所有节点的IP)
 wsrep_cluster_address=gcomm://{% for i in groups['all'] %}{{i}}{% if loop.last %}{% else %},{% endif %} {% endfor %}
+
 binlog_format=row
 default_storage_engine=InnoDB
 innodb_autoinc_lock_mode=2
