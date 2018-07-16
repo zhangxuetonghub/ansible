@@ -49,7 +49,25 @@
 
   - name: start_app
     shell: rabbitmqctl start_app
-
+    
+- hosts: master
+  remote_user: root
+  gather_facts: True
+  tasks:
+  - name: add user root
+    rabbitmq_user:
+      user: root
+      password: admin
+      tags: administrator
+      vhost: /
+      configure_priv: .*
+      read_priv: .*
+      write_priv: .*
+      state: present
+  - name: add user guest
+    rabbitmq_user:
+      user: guest
+      state: absent
 
 #hosts
 172.16.92.8 rabbit-1
