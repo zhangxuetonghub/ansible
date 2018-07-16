@@ -1,0 +1,51 @@
+---
+- hosts: all
+  remote_user: root
+  gather_facts: True
+  tasks:
+  - name: disabled selinux
+    selinux: policy=targeted state=permissive
+    selinux: state=disabled
+
+
+  - name: 同步hosts文件
+    copy: src=/root/rabbitmq/hosts dest=/etc/hosts
+
+  - name: install firewalld
+    yum: name=firewalld state=present
+
+  - name: sotp firewalld
+    service: name=firewalld state=stopped enabled=no
+
+  - name: 安装rabbitmq-server
+    yum: name=rabbitmq-server  state=present
+
+  - name: 同步.erlang.cookie文件
+    copy: src=/root/rabbitmq/.erlang.cookie dest=/var/lib/rabbitmq/.erlang.cookie
+
+  - name: 更改.erlang.cookie文件属主和属组
+    file: path=/var/lib/rabbitmq/.erlang.cookie owner=rabbitmq group=rabbitmq mode=0400
+
+  - name: 启动所有节点的服务
+    service: name=rabbitmq-server state=started enabled=yes
+
+  - name: Enables the rabbitmq_management plugin
+    rabbitmq_plugin:
+      names: rabbitmq_management
+      state: enabled
+
+  - name: 重新启动所有节点的服务
+    service: name=rabbitmq-server state=restarted
+
+- hosts: others
+  remote_user: root
+  gather_facts: True
+  tasks:
+  - name: stop_app
+    shell: rabbitmqctl stop_app
+
+  - name: 其他节点加入集群
+    shell: rabbitmqctl join_cluster rabbit@rabbit-1
+
+  - name: start_app
+    shell: rabbitmqctl start_app
