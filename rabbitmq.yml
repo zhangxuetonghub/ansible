@@ -49,3 +49,21 @@
 
   - name: start_app
     shell: rabbitmqctl start_app
+
+
+#hosts
+172.16.92.8 rabbit-1
+172.16.92.3 rabbit-2
+172.16.92.6 rabbit-3
+
+
+#servers
+[master]
+172.16.92.8
+[others]
+172.16.92.3
+172.16.92.6
+
+
+#.erlang.cookie
+IDYSGAAFRQCPDXNBEKNE
